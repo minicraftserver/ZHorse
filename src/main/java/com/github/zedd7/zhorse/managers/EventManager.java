@@ -156,7 +156,7 @@ public class EventManager implements Listener {
 	public void onEntityPortal(EntityPortalEvent e) {
 		if (e.getEntity() instanceof AbstractHorse) {
 			AbstractHorse horse = (AbstractHorse) e.getEntity();
-			if (!zh.getCM().shouldUsePaperAPITeleportMethod() && zh.getDM().isHorseRegistered(horse.getUniqueId(), true, null)) {
+			if (zh.getDM().isHorseRegistered(horse.getUniqueId(), true, null)) {
 				e.setCancelled(true);
 				Location destination = e.getTo();
 				if (zh.getCM().isWorldCrossable(destination.getWorld())) {
@@ -170,7 +170,7 @@ public class EventManager implements Listener {
 	public void onEntityTeleport(EntityTeleportEvent e) {
 		if (e.getEntity() instanceof AbstractHorse) {
 			AbstractHorse horse = (AbstractHorse) e.getEntity();
-			if (zh.getDM().isHorseRegistered(horse.getUniqueId(), true, null)) {
+			if (!zh.getCM().shouldUsePaperAPITeleportMethod() && zh.getDM().isHorseRegistered(horse.getUniqueId(), true, null)) {
 				e.setCancelled(true);
 				if (zh.getCM().isWorldEnabled(e.getTo().getWorld())) {
 					zh.getHM().teleportHorse(horse, e.getTo(), true);
