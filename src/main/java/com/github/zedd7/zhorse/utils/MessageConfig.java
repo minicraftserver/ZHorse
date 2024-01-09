@@ -150,7 +150,10 @@ public class MessageConfig {
 				flagContent = numberFormatter.format(token);
 			}
 			else {
-				flagContent = token.toString();
+				if(token != null)
+					flagContent = token.toString();
+				else
+					flagContent = "";
 			}
 			flagContentList.add(flagContent);
 		}
