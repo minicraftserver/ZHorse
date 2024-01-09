@@ -65,7 +65,7 @@ public enum KeyWordEnum {
 	TABLE_PREFIX("Databases.mysql-config.table-prefix"),
 	TP_MAX_RANGE("Settings.tp-max-range"),
 	TYPE("Databases.type"),
-	USE_OLD_TELEPORT_METHOD("Settings.use-old-teleport-method"),
+	USE_PAPERAPI_TELEPORT_METHOD("Settings.use-paperapi-teleport-method"),
 	USER("Databases.mysql-config.user"),
 	USE_DEFAULT_STABLE("Settings.use-default-stable"),
 	USE_EXACT_STATS("Settings.use-exact-stats"),

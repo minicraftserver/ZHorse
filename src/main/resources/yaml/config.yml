@@ -368,11 +368,10 @@ Settings:
   # Does not affect actual horse stats, only applies to /zh spawn and /zh info.
   use-vanilla-stats: true
 
-  # Set to true to switch to the teleportation method used in ZHorse 1.4-.
-  # This is only recommended for servers using plugins that are
-  # incompatible with the new ZHorse 1.5+ teleportation method.
-  # The new method removes horses and respawns them at destination.
-  use-old-teleport-method: false
+  # Set to false to switch to the custom teleport method provided by ZHorse
+  # The custom method will removes horses and respawns them at destination
+  # Keep it on true to use the async teleportation method provided by the PaperAPI
+  use-paperapi-teleport-method: true
   
   # Set to true to use the location defined by default-stable-location for
   # horses whose stable has not been defined when using /zh stable go or

@@ -196,8 +196,8 @@ public class HorseManager {
 	}
 
 	public AbstractHorse teleportHorse(AbstractHorse sourceHorse, Location destination, boolean sync) {
-		if (zh.getCM().shouldUseOldTeleportMethod()) {
-			sourceHorse.teleport(destination);
+		if (zh.getCM().shouldUsePaperAPITeleportMethod()) {
+			sourceHorse.teleportAsync(destination);
 			zh.getDM().updateHorseLocation(sourceHorse.getUniqueId(), destination, false, false, null);
 			return sourceHorse;
 		}
