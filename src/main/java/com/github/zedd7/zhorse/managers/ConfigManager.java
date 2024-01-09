@@ -292,7 +292,7 @@ public class ConfigManager {
 	}
 
 	public boolean shouldUsePaperAPITeleportMethod() {
-		return config.getBoolean(KeyWordEnum.USE_PAPERAPI_TELEPORT_METHOD.getValue(), false);
+		return config.getBoolean(KeyWordEnum.USE_PAPERAPI_TELEPORT_METHOD.getValue(), true);
 	}
 
 	public boolean shouldUseDefaultStable() {
