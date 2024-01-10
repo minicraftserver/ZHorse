@@ -5,6 +5,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import com.github.zedd7.zhorse.enums.LocaleEnum;
 
@@ -150,10 +151,7 @@ public class MessageConfig {
 				flagContent = numberFormatter.format(token);
 			}
 			else {
-				if(token != null)
-					flagContent = token.toString();
-				else
-					flagContent = "";
+				flagContent = Objects.toString(token, "");
 			}
 			flagContentList.add(flagContent);
 		}
