@@ -33,7 +33,7 @@ public class PlayerQuit {
 
 									@Override
 									public void callback(CallbackResponse<Location> response) {
-										AbstractHorse horse = zh.getHM().getHorse(horseRecord);
+										AbstractHorse horse = zh.getHM().getHorse(horseUUID);
 										if (horse != null && (!horse.isLeashed() || !blockLeashedTeleport)) {
 											Location stableLocation = response.getResult();
 											if (stableLocation != null && zh.getCM().isWorldCrossable(stableLocation.getWorld())) {

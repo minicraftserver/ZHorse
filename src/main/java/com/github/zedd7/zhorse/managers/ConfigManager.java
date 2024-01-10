@@ -291,8 +291,8 @@ public class ConfigManager {
 		return config.getBoolean(KeyWordEnum.USE_VANILLA_STATS.getValue(), true);
 	}
 
-	public boolean shouldUseOldTeleportMethod() {
-		return config.getBoolean(KeyWordEnum.USE_OLD_TELEPORT_METHOD.getValue(), false);
+	public boolean shouldUsePaperAPITeleportMethod() {
+		return config.getBoolean(KeyWordEnum.USE_PAPERAPI_TELEPORT_METHOD.getValue(), true);
 	}
 
 	public boolean shouldUseDefaultStable() {
