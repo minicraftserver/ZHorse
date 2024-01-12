@@ -33,7 +33,7 @@ public class CommandHere extends AbstractCommand {
 
 	private void execute(UUID ownerUUID, String horseID) {
 		if (isRegistered(ownerUUID, horseID)) {
-			horse = zh.getHM().getHorse(ownerUUID, Integer.parseInt(horseID));
+			horse = zh.getHM().getHorse(ownerUUID, Integer.parseInt(horseID), true);
 			if (isHorseLoaded(true)) {
 				execute();
 			}

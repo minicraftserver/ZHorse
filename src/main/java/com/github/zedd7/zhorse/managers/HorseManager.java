@@ -49,15 +49,104 @@ public class HorseManager {
 		return getHorse(playerUUID, zh.getDM().getPlayerFavoriteHorseID(playerUUID, true, null));
 	}
 
-	public AbstractHorse getHorse(UUID horseUUID){
-		return (AbstractHorse) zh.getServer().getEntity(horseUUID);
+	public AbstractHorse getHorse(UUID playerUUID, Integer horseID){
+		return getHorse(playerUUID, horseID, false);
 	}
 
-	public AbstractHorse getHorse(UUID playerUUID, Integer horseID) {
+	public AbstractHorse getHorse(UUID playerUUID, Integer horseID, boolean ignoreHorseTrackedCache) {
 		AbstractHorse horse = null;
 		if (playerUUID != null && horseID != null) {
 			UUID horseUUID = zh.getDM().getHorseUUID(playerUUID, horseID, true, null);
-			horse = getHorse(horseUUID);
+			HorseRecord horseRecord = zh.getDM().getHorseRecord(horseUUID, true, null);
+			horse = getHorse(horseRecord, ignoreHorseTrackedCache);
+		}
+		return horse;
+	}
+
+	public AbstractHorse getHorse(HorseRecord horseRecord, boolean ignoreHorseTrackedCache) {
+		AbstractHorse horse = null;
+		if (horseRecord != null) {
+			UUID horseUUID = UUID.fromString(horseRecord.getUUID());
+			if (isHorseTracked(horseUUID) && !ignoreHorseTrackedCache) {
+				horse = getTrackedHorse(horseUUID);
+			}
+			else {
+				Location location = new Location(
+						zh.getServer().getWorld(horseRecord.getLocationWorld()),
+						horseRecord.getLocationX(),
+						horseRecord.getLocationY(),
+						horseRecord.getLocationZ()
+				);
+				horse = getHorseFromLocation(horseUUID, location);
+				if (horse != null) {
+					boolean hasMoved = (
+							horse.getLocation().getBlockX() != location.getBlockX() ||
+									horse.getLocation().getBlockY() != location.getBlockY() ||
+									horse.getLocation().getBlockZ() != location.getBlockZ()
+					);
+					if (hasMoved) {
+						zh.getDM().updateHorseLocation(horseUUID, horse.getLocation(), false, false, null);
+					}
+				}
+				else if (zh.getCM().shouldRespawnMissingHorse()) {
+					HorseInventoryRecord inventoryRecord = zh.getDM().getHorseInventoryRecord(horseUUID, true, null);
+					HorseStatsRecord statsRecord = zh.getDM().getHorseStatsRecord(horseUUID, true, null);
+					if (inventoryRecord != null && statsRecord != null) { // Do not spawn if exact copy is impossible
+						horse = spawnHorse(location, inventoryRecord, statsRecord, true, horseUUID, horseRecord.getId(), horseRecord.getName());
+					}
+				}
+			}
+		}
+		return horse;
+	}
+
+	private AbstractHorse getHorseFromLocation(UUID horseUUID, Location location) {
+		AbstractHorse horse = null;
+		if (location != null) {
+			if (loadChunk(location)) { // Ensure the chunk is loaded
+				horse = getHorseInChunk(horseUUID, location.getChunk());
+				if (horse == null) {
+					List<Chunk> neighboringChunks = getChunksInRegion(location, 2, false);
+					horse = getHorseInRegion(horseUUID, neighboringChunks);
+				}
+			}
+		}
+		return horse;
+	}
+
+	private List<Chunk> getChunksInRegion(Location center, int chunkRange, boolean includeCentralChunk) {
+		World world = center.getWorld();
+		Location NWCorner = new Location(world, center.getX() - 16 * chunkRange, 0, center.getZ() - 16 * chunkRange);
+		Location SECorner = new Location(world, center.getX() + 16 * chunkRange, 0, center.getZ() + 16 * chunkRange);
+		List<Chunk> chunkList = new ArrayList<Chunk>();
+		for (int x = NWCorner.getBlockX(); x <= SECorner.getBlockX(); x += 16) {
+			for (int z = NWCorner.getBlockZ(); z <= SECorner.getBlockZ(); z += 16) {
+				if (center.getBlockX() != x || center.getBlockZ() != z || includeCentralChunk) {
+					Location chunkLocation = new Location(world, x, 0, z);
+					Chunk chunk = world.getChunkAt(chunkLocation); // w.getChunkAt(x, z) uses chunk coordinates (loc / 16)
+					chunkList.add(chunk);
+				}
+			}
+		}
+		return chunkList;
+	}
+
+	private AbstractHorse getHorseInChunk(UUID horseUUID, Chunk chunk) {
+		for (Entity entity : chunk.getEntities()) {
+			if (entity.getUniqueId().equals(horseUUID)) {
+				return (AbstractHorse) entity;
+			}
+		}
+		return null;
+	}
+
+	private AbstractHorse getHorseInRegion(UUID horseUUID, List<Chunk> region) {
+		AbstractHorse horse = null;
+		for (Chunk chunk : region) {
+			horse = getHorseInChunk(horseUUID, chunk);
+			if (horse != null) {
+				return horse;
+			}
 		}
 		return horse;
 	}
@@ -113,7 +202,7 @@ public class HorseManager {
 
 	public AbstractHorse teleportHorse(AbstractHorse sourceHorse, Location destination, boolean sync) {
 		if (zh.getCM().shouldUsePaperAPITeleportMethod()) {
-			sourceHorse.teleportAsync(destination);
+			sourceHorse.teleport(destination);
 			zh.getDM().updateHorseLocation(sourceHorse.getUniqueId(), destination, false, false, null);
 			return sourceHorse;
 		}
@@ -272,20 +361,21 @@ public class HorseManager {
 	}
 
 	private boolean loadChunk(Location location) {
-		boolean chunkWasLoaded = true;
-		int chunkXCoordinate = toChunkCoordinate(location.getBlockX());
-		int chunkZCoordinate = toChunkCoordinate(location.getBlockZ());
-		if (!location.getWorld().isChunkLoaded(chunkXCoordinate, chunkZCoordinate)) {
-			location.getWorld().loadChunk(chunkXCoordinate, chunkZCoordinate);
-			chunkWasLoaded = false;
+		World world = location.getWorld();
+		int chunkX = location.getChunk().getX();
+		int chunkZ = location.getChunk().getZ();
+
+		if (!world.isChunkLoaded(chunkX, chunkZ)) {
+			world.getChunkAt(chunkX, chunkZ);
+			return false;
 		}
-		return chunkWasLoaded;
+		return true;
 	}
 
 	private void unloadChunk(Location location) {
 		int chunkXCoordinate = toChunkCoordinate(location.getBlockX());
 		int chunkZCoordinate = toChunkCoordinate(location.getBlockZ());
-		location.getWorld().unloadChunk(chunkXCoordinate, chunkZCoordinate);
+		location.getWorld().unloadChunkRequest(chunkXCoordinate, chunkZCoordinate);
 	}
 
 	private int toChunkCoordinate(int coordinate) {
