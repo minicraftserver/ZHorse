@@ -7,6 +7,7 @@ public enum HorseVariantEnum {
 	DONKEY(EntityType.DONKEY, "donkey"),
 	HORSE(EntityType.HORSE, "horse"),
 	LLAMA(EntityType.LLAMA, "llama", "lama"),
+	TRADE_LLAMA(EntityType.TRADER_LLAMA, "trader_llama"),
 	MULE(EntityType.MULE, "mule"),
 	SKELETON(EntityType.SKELETON_HORSE, "skeleton", "skel"),
 	ZOMBIE(EntityType.ZOMBIE_HORSE, "zombie", "zomb", "undead");
