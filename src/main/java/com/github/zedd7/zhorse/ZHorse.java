@@ -28,10 +28,14 @@ public class ZHorse extends JavaPlugin {
 		initMetrics();
 	}
 
-	@Override
+    @Override
     public void onDisable() {
-		horseManager.untrackHorses();
-		dataManager.closeDatabase();
+                if (horseManager != null) {
+                        horseManager.untrackHorses();
+                }
+                if (dataManager != null) {
+                        dataManager.closeDatabase();
+                }
     }
 
 	private void disable() {

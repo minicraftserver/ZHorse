@@ -4,12 +4,11 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
+import io.papermc.paper.command.brigadier.BasicCommand;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
 
 import com.github.zedd7.zhorse.ZHorse;
 import com.github.zedd7.zhorse.enums.CommandEnum;
@@ -17,24 +16,34 @@ import com.github.zedd7.zhorse.enums.KeyWordEnum;
 import com.github.zedd7.zhorse.enums.LocaleEnum;
 import com.github.zedd7.zhorse.utils.MessageConfig;
 
-public class CommandManager implements CommandExecutor, TabCompleter {
+public class CommandManager {
 
-	private ZHorse zh;
-	private Map<String, Duration> commandCooldownMap = new HashMap<>();
-	private Map<UUID, Map<String, Instant>> commandHistoryMap = new HashMap<>();
+        private ZHorse zh;
+        private Map<String, Duration> commandCooldownMap = new HashMap<>();
+        private Map<UUID, Map<String, Instant>> commandHistoryMap = new HashMap<>();
 
-	public CommandManager(ZHorse zh) {
-		this.zh = zh;
-		zh.getCommand(zh.getDescription().getName().toLowerCase()).setExecutor(this);
-	}
+        public CommandManager(ZHorse zh) {
+                this.zh = zh;
+                zh.registerCommand("zhorse", "Main ZHorse command", Collections.singletonList("zh"), new BasicCommand() {
 
-	@Override
-	public boolean onCommand(CommandSender s, Command c, String l, String[] a) {
-		if (a.length == 0) { // No command provided
-			PluginDescriptionFile pluginDescription = zh.getDescription();
-			String pluginNameAndVersion = String.format("%s %s", pluginDescription.getName(), pluginDescription.getVersion());
-			String author = pluginDescription.getAuthors().get(0);
-			String pluginHeader = zh.getMM().getMessage(s, new MessageConfig(LocaleEnum.PLUGIN_HEADER) {{ setPlayerName(author); setValue(pluginNameAndVersion); }}, true);
+                        @Override
+                        public void execute(CommandSourceStack stack, String[] args) {
+                                onCommand(stack.getSender(), args);
+                        }
+
+                        @Override
+                        public Collection<String> suggest(CommandSourceStack stack, String[] args) {
+                                return onTabComplete(stack.getSender(), args);
+                        }
+                });
+        }
+
+        public void onCommand(CommandSender s, String[] a) {
+                if (a.length == 0) { // No command provided
+                        PluginDescriptionFile pluginDescription = zh.getDescription();
+                        String pluginNameAndVersion = String.format("%s %s", pluginDescription.getName(), pluginDescription.getVersion());
+                        String author = pluginDescription.getAuthors().get(0);
+                        String pluginHeader = zh.getMM().getMessage(s, new MessageConfig(LocaleEnum.PLUGIN_HEADER) {{ setPlayerName(author); setValue(pluginNameAndVersion); }}, true);
 			LocaleEnum helpDescription = LocaleEnum.valueOf(CommandEnum.HELP.getName().toUpperCase() + KeyWordEnum.SEPARATOR.getValue() + KeyWordEnum.DESCRIPTION.getValue());
 			zh.getMM().sendMessage(s, new MessageConfig(LocaleEnum.HEADER_FORMAT) {{ setValue(pluginHeader); }}, true);
 			zh.getMM().sendMessage(s, new MessageConfig(helpDescription) {{ setSpaceCount(1); }}, true);
@@ -48,20 +57,18 @@ public class CommandManager implements CommandExecutor, TabCompleter {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-			} else {
-				zh.getMM().sendMessage(s, new MessageConfig(LocaleEnum.UNKNOWN_COMMAND) {{ setValue(a[0].toLowerCase()); }});
-			}
-		}
-		return true;
-	}
+                        } else {
+                                zh.getMM().sendMessage(s, new MessageConfig(LocaleEnum.UNKNOWN_COMMAND) {{ setValue(a[0].toLowerCase()); }});
+                        }
+                }
+        }
 
-	@Override
-	public List<String> onTabComplete(CommandSender s, Command c, String alias, String[] a) {
-		List<String> tabSuggestionList = new ArrayList<>();
-		if (a.length <= 1) { // No command provided or filling first argument
-			for (String commandName : CommandEnum.getNameList()) {
-				String permission = KeyWordEnum.ZH_PREFIX.getValue() + commandName;
-				if ((a.length == 0 || commandName.startsWith(a[0].toLowerCase())) && zh.getPM().has(s, permission)) {
+        public List<String> onTabComplete(CommandSender s, String[] a) {
+                List<String> tabSuggestionList = new ArrayList<>();
+                if (a.length <= 1) { // No command provided or filling first argument
+                        for (String commandName : CommandEnum.getNameList()) {
+                                String permission = KeyWordEnum.ZH_PREFIX.getValue() + commandName;
+                                if ((a.length == 0 || commandName.startsWith(a[0].toLowerCase())) && zh.getPM().has(s, permission)) {
 					tabSuggestionList.add(commandName);
 				}
 			}
@@ -82,8 +89,8 @@ public class CommandManager implements CommandExecutor, TabCompleter {
 				}
 			}
 		}
-		return tabSuggestionList;
-	}
+                return tabSuggestionList;
+        }
 
 	public void loadCommandCooldowns() {
 		for (String command : CommandEnum.getNameList()) {

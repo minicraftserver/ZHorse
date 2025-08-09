@@ -6,13 +6,6 @@ website: ${url}
 author: ${author}
 main: ${main-class}
 api-version: 1.21
-
-commands:
-  zhorse:
-    description: Main ZHorse command
-    usage: /<command> [arguments]
-    aliases: [zh]
-
 permissions:
   zh.*:
     description: Grant full access to ZHorse
