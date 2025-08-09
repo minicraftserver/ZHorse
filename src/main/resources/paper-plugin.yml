@@ -1,11 +1,13 @@
 name: ${name}
 version: ${version}
-depend: [Vault]
 description: ${description}
 website: ${url}
 author: ${author}
 main: ${main-class}
 api-version: 1.21
+dependencies:
+  - name: Vault
+    required: true
 permissions:
   zh.*:
     description: Grant full access to ZHorse
