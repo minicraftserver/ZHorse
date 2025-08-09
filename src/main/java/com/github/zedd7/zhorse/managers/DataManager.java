@@ -16,7 +16,7 @@ import com.github.zedd7.zhorse.database.HorseInventoryRecord;
 import com.github.zedd7.zhorse.database.HorseRecord;
 import com.github.zedd7.zhorse.database.HorseStableRecord;
 import com.github.zedd7.zhorse.database.HorseStatsRecord;
-import com.github.zedd7.zhorse.database.MySQLConnector;
+import com.github.zedd7.zhorse.database.MariaDBConnector;
 import com.github.zedd7.zhorse.database.PendingMessageRecord;
 import com.github.zedd7.zhorse.database.PlayerRecord;
 import com.github.zedd7.zhorse.database.SQLDatabaseConnector;
@@ -49,9 +49,9 @@ public class DataManager {
 	public void openDatabase() {
 		DatabaseEnum database = zh.getCM().getDatabaseType();
 		switch (database) {
-		case MYSQL:
-			db = new MySQLConnector(zh);
-			break;
+               case MARIADB:
+                       db = new MariaDBConnector(zh);
+                       break;
 		case SQLITE:
 			db = new SQLiteConnector(zh);
 			break;

@@ -123,9 +123,9 @@ public class HorseManager {
 			for (int z = NWCorner.getBlockZ(); z <= SECorner.getBlockZ(); z += 16) {
 				if (center.getBlockX() != x || center.getBlockZ() != z || includeCentralChunk) {
 					Location chunkLocation = new Location(world, x, 0, z);
-					Chunk chunk = world.getChunkAt(chunkLocation); // w.getChunkAt(x, z) uses chunk coordinates (loc / 16)
-					chunkList.add(chunk);
-				}
+                                       Chunk chunk = world.getChunkAtAsync(chunkLocation.getBlockX() >> 4, chunkLocation.getBlockZ() >> 4).join();
+                                       chunkList.add(chunk);
+                               }
 			}
 		}
 		return chunkList;
@@ -200,19 +200,23 @@ public class HorseManager {
 		zh.getDM().updateHorseStats(statsRecord, sync, null);
 	}
 
-	public AbstractHorse teleportHorse(AbstractHorse sourceHorse, Location destination, boolean sync) {
-		if (zh.getCM().shouldUsePaperAPITeleportMethod()) {
-			sourceHorse.teleport(destination);
-			zh.getDM().updateHorseLocation(sourceHorse.getUniqueId(), destination, false, false, null);
-			return sourceHorse;
-		}
-		else {
-			synchronized(ChunkUnload.class) { // Synchronize with HorseManager::teleport to avoid updating outdated horse
-				AbstractHorse copyHorse = (AbstractHorse) destination.getWorld().spawnEntity(destination, sourceHorse.getType());
-				if (copyHorse != null) {
-					UUID oldHorseUUID = sourceHorse.getUniqueId();
-					UUID newHorseUUID = copyHorse.getUniqueId();
-					zh.getDM().getOwnerUUID(oldHorseUUID, false, new CallbackListener<UUID>() {
+       public AbstractHorse teleportHorse(AbstractHorse sourceHorse, Location destination, boolean sync) {
+               boolean chunkWasLoaded = loadChunk(destination);
+               if (zh.getCM().shouldUsePaperAPITeleportMethod()) {
+                       sourceHorse.teleportAsync(destination).join();
+                       zh.getDM().updateHorseLocation(sourceHorse.getUniqueId(), destination, false, false, null);
+                       if (!chunkWasLoaded) {
+                               unloadChunk(destination);
+                       }
+                       return sourceHorse;
+               }
+               else {
+                       synchronized(ChunkUnload.class) { // Synchronize with HorseManager::teleport to avoid updating outdated horse
+                               AbstractHorse copyHorse = (AbstractHorse) destination.getWorld().spawnEntity(destination, sourceHorse.getType());
+                               if (copyHorse != null) {
+                                       UUID oldHorseUUID = sourceHorse.getUniqueId();
+                                       UUID newHorseUUID = copyHorse.getUniqueId();
+                                       zh.getDM().getOwnerUUID(oldHorseUUID, false, new CallbackListener<UUID>() {
 
 						@Override
 						public void callback(CallbackResponse<UUID> response) {
@@ -225,25 +229,28 @@ public class HorseManager {
 								untrackHorse(sourceHorse.getUniqueId());
 								trackHorse(copyHorse);
 								removeHorse(sourceHorse);
-								zh.getDM().updateHorseUUID(oldHorseUUID, newHorseUUID, false, new CallbackListener<Boolean>() {
+                                                               zh.getDM().updateHorseUUID(oldHorseUUID, newHorseUUID, false, new CallbackListener<Boolean>() {
 
 									@Override
 									public void callback(CallbackResponse<Boolean> response) {
-										if (response.getResult()) {
-											zh.getDM().updateHorseLocation(newHorseUUID, destination, false, false, null);
-										}
+                                                                               if (response.getResult()) {
+                                                                                       zh.getDM().updateHorseLocation(newHorseUUID, destination, false, false, null);
+                                                                               }
 									}
 
 								});
 							}
 						}
 
-					});
-				}
-				return copyHorse;
-			}
-		}
-	}
+                                       });
+                               }
+                               if (!chunkWasLoaded) {
+                                       unloadChunk(destination);
+                               }
+                               return copyHorse;
+                       }
+               }
+       }
 
 	public void assignStats(AbstractHorse horse, HorseStatsRecord statsRecord, UUID ownerUUID) {
 		// DB stats
@@ -360,17 +367,17 @@ public class HorseManager {
 		return horse;
 	}
 
-	private boolean loadChunk(Location location) {
-		World world = location.getWorld();
-		int chunkX = location.getChunk().getX();
-		int chunkZ = location.getChunk().getZ();
+       private boolean loadChunk(Location location) {
+               World world = location.getWorld();
+               int chunkX = location.getChunk().getX();
+               int chunkZ = location.getChunk().getZ();
 
-		if (!world.isChunkLoaded(chunkX, chunkZ)) {
-			world.getChunkAt(chunkX, chunkZ);
-			return false;
-		}
-		return true;
-	}
+               if (!world.isChunkLoaded(chunkX, chunkZ)) {
+                       world.getChunkAtAsync(chunkX, chunkZ).join();
+                       return false;
+               }
+               return true;
+       }
 
 	private void unloadChunk(Location location) {
 		int chunkXCoordinate = toChunkCoordinate(location.getBlockX());

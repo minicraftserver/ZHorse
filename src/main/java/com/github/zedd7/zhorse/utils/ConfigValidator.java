@@ -65,23 +65,23 @@ public class ConfigValidator extends YamlResourceValidator {
 		if (validateSectionSet(KeyWordEnum.DATABASES.getValue())) {
 			if (validateOptionSet(KeyWordEnum.TYPE.getValue())) {
 				String databaseType = resource.getString(KeyWordEnum.TYPE.getValue());
-				if (databaseType.equalsIgnoreCase(DatabaseEnum.MYSQL.getName())) {
-					validateOptionSet(KeyWordEnum.HOST.getValue());
-					validateOptionSet(KeyWordEnum.PORT.getValue());
-					validateOptionSet(KeyWordEnum.USER.getValue());
-					validateOptionSet(KeyWordEnum.PASSWORD.getValue());
-					validateOptionSet(KeyWordEnum.DATABASE.getValue());
-					validateOptionSet(KeyWordEnum.TABLE_PREFIX.getValue());
-				}
-				else if (databaseType.equalsIgnoreCase(DatabaseEnum.SQLITE.getName())) {
-					validateOptionSet(KeyWordEnum.FILE_NAME.getValue());
-				}
-				else {
-					invalidate("The database type must be SQLite & MySQL !", true);
-				}
-	        }
-		}
-	}
+                               if (databaseType.equalsIgnoreCase(DatabaseEnum.MARIADB.getName())) {
+                                       validateOptionSet(KeyWordEnum.HOST.getValue());
+                                       validateOptionSet(KeyWordEnum.PORT.getValue());
+                                       validateOptionSet(KeyWordEnum.USER.getValue());
+                                       validateOptionSet(KeyWordEnum.PASSWORD.getValue());
+                                       validateOptionSet(KeyWordEnum.DATABASE.getValue());
+                                       validateOptionSet(KeyWordEnum.TABLE_PREFIX.getValue());
+                               }
+                               else if (databaseType.equalsIgnoreCase(DatabaseEnum.SQLITE.getName())) {
+                                       validateOptionSet(KeyWordEnum.FILE_NAME.getValue());
+                               }
+                               else {
+                                       invalidate("The database type must be SQLite & MariaDB !", true);
+                               }
+               }
+               }
+       }
 
 	private void validateGroupsSection() {
 		if (validateSectionSet(KeyWordEnum.GROUPS.getValue())) {

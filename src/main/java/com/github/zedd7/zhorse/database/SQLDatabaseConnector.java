@@ -15,15 +15,16 @@ import org.bukkit.scheduler.BukkitRunnable;
 import com.github.zedd7.zhorse.ZHorse;
 import com.github.zedd7.zhorse.utils.CallbackListener;
 import com.github.zedd7.zhorse.utils.CallbackResponse;
+import com.zaxxer.hikari.HikariDataSource;
 
 public abstract class SQLDatabaseConnector {
 
 	protected static final String PREFIX_CODE = "prefix_";
 
-	protected ZHorse zh;
-	protected Connection connection;
-	protected boolean connected;
-	protected String tablePrefix = "";
+       protected ZHorse zh;
+       protected HikariDataSource dataSource;
+       protected boolean connected;
+       protected String tablePrefix = "";
 
 	public SQLDatabaseConnector(ZHorse zh) {
 		this.zh = zh;
@@ -31,26 +32,31 @@ public abstract class SQLDatabaseConnector {
 
 	protected abstract void openConnection() throws SQLException;
 
-	public void closeConnection() {
-		try {
-			if (connection != null) {
-				connection.close();
-			}
-		} catch (Exception e) {
-			zh.getLogger().severe("Failed to close connection with database !");
-			e.printStackTrace();
-		}
-	}
+       public void closeConnection() {
+               try {
+                       if (dataSource != null && !dataSource.isClosed()) {
+                               dataSource.close();
+                       }
+               } catch (Exception e) {
+                       zh.getLogger().severe("Failed to close connection with database !");
+                       e.printStackTrace();
+               }
+       }
 
 	public boolean isConnected() {
 		return connected;
 	}
 
-	protected void checkConnection() throws SQLException {
-		if (connection.isClosed()) {
-			openConnection();
-		}
-	}
+       protected void checkConnection() throws SQLException {
+               if (dataSource == null || dataSource.isClosed()) {
+                       openConnection();
+               }
+       }
+
+       protected Connection getConnection() throws SQLException {
+               checkConnection();
+               return dataSource.getConnection();
+       }
 
 	public String applyTablePrefix(String formatableQuery) {
 		if (!tablePrefix.isEmpty()) {
@@ -61,11 +67,10 @@ public abstract class SQLDatabaseConnector {
 		}
 	}
 
-	public PreparedStatement getPreparedStatement(String formatableQuery) throws SQLException {
-		checkConnection();
-		String query = applyTablePrefix(formatableQuery);
-		return connection.prepareStatement(query);
-	}
+       public PreparedStatement getPreparedStatement(Connection connection, String formatableQuery) throws SQLException {
+               String query = applyTablePrefix(formatableQuery);
+               return connection.prepareStatement(query);
+       }
 
 	public boolean executeUpdate(String update, boolean sync, CallbackListener<Boolean> listener) {
 		return executeUpdate(update, false, sync, listener);
@@ -78,10 +83,11 @@ public abstract class SQLDatabaseConnector {
 			@Override
 			public void run() {
 				boolean success = false;
-				try (PreparedStatement statement = getPreparedStatement(formatableUpdate)) {
-					statement.executeUpdate();
-					success = true;
-				} catch (SQLException e) {
+                               try (Connection connection = getConnection();
+                                            PreparedStatement statement = getPreparedStatement(connection, formatableUpdate)) {
+                                       statement.executeUpdate();
+                                       success = true;
+                               } catch (SQLException e) {
 					if (!hideExceptions) {
 						e.printStackTrace();
 						String update = applyTablePrefix(formatableUpdate);
@@ -346,10 +352,11 @@ public abstract class SQLDatabaseConnector {
 			@Override
 			public void run() {
 				T result = null;
-				try (PreparedStatement statement = getPreparedStatement(formatableQuery)) {
-					ResultSet resultSet = statement.executeQuery();
-					if (resultSet.next()) {
-						result = mapper.apply(resultSet);
+                               try (Connection connection = getConnection();
+                                            PreparedStatement statement = getPreparedStatement(connection, formatableQuery)) {
+                                       ResultSet resultSet = statement.executeQuery();
+                                       if (resultSet.next()) {
+                                               result = mapper.apply(resultSet);
 					}
 				} catch (SQLException e) {
 					e.printStackTrace();
@@ -380,10 +387,11 @@ public abstract class SQLDatabaseConnector {
 			@Override
 			public void run() {
 				List<T> resultList = new ArrayList<>();
-				try (PreparedStatement statement = getPreparedStatement(query)) {
-					ResultSet resultSet = statement.executeQuery();
-					while (resultSet.next()) {
-						T result = mapper.apply(resultSet);
+                               try (Connection connection = getConnection();
+                                            PreparedStatement statement = getPreparedStatement(connection, query)) {
+                                       ResultSet resultSet = statement.executeQuery();
+                                       while (resultSet.next()) {
+                                               T result = mapper.apply(resultSet);
 						resultList.add(result);
 					}
 				} catch (SQLException e) {

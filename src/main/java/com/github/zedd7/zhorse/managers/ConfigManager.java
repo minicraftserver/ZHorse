@@ -97,12 +97,12 @@ public class ConfigManager {
 
 	public DatabaseEnum getDatabaseType() {
 		String databaseType = config.getString(KeyWordEnum.TYPE.getValue());
-		if (databaseType.equalsIgnoreCase(DatabaseEnum.MYSQL.getName())) {
-			return DatabaseEnum.MYSQL;
-		} else if (databaseType.equalsIgnoreCase(DatabaseEnum.SQLITE.getName())) {
-			return DatabaseEnum.SQLITE;
-		} else if (databaseType.equalsIgnoreCase(DatabaseEnum.YAML.getName())) {
-			return DatabaseEnum.YAML;
+               if (databaseType.equalsIgnoreCase(DatabaseEnum.MARIADB.getName())) {
+                       return DatabaseEnum.MARIADB;
+               } else if (databaseType.equalsIgnoreCase(DatabaseEnum.SQLITE.getName())) {
+                       return DatabaseEnum.SQLITE;
+               } else if (databaseType.equalsIgnoreCase(DatabaseEnum.YAML.getName())) {
+                       return DatabaseEnum.YAML;
 		}
 		return null;
 	}

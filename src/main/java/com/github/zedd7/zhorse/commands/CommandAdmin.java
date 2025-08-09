@@ -8,7 +8,7 @@ import org.bukkit.entity.AbstractHorse;
 
 import com.github.zedd7.zhorse.ZHorse;
 import com.github.zedd7.zhorse.database.HorseDeathRecord;
-import com.github.zedd7.zhorse.database.MySQLImporter;
+import com.github.zedd7.zhorse.database.MariaDBImporter;
 import com.github.zedd7.zhorse.database.SQLiteImporter;
 import com.github.zedd7.zhorse.database.YAMLImporter;
 import com.github.zedd7.zhorse.enums.AdminSubCommandEnum;
@@ -179,10 +179,10 @@ public class CommandAdmin extends AbstractCommand {
 			if (args.size() >= 2) {
 				String databaseName = args.get(1);
 				boolean success = false;
-				if (databaseName.equalsIgnoreCase(DatabaseEnum.MYSQL.getName())) {
-					zh.getMM().sendMessage(s, new MessageConfig(LocaleEnum.DATABASE_IMPORT_STARTED) {{ setValue(databaseName); }});
-					success = MySQLImporter.importData(zh);
-				}
+                               if (databaseName.equalsIgnoreCase(DatabaseEnum.MARIADB.getName())) {
+                                       zh.getMM().sendMessage(s, new MessageConfig(LocaleEnum.DATABASE_IMPORT_STARTED) {{ setValue(databaseName); }});
+                                       success = MariaDBImporter.importData(zh);
+                               }
 				else if (databaseName.equalsIgnoreCase(DatabaseEnum.SQLITE.getName())) {
 					zh.getMM().sendMessage(s, new MessageConfig(LocaleEnum.DATABASE_IMPORT_STARTED) {{ setValue(databaseName); }});
 					success = SQLiteImporter.importData(zh);

@@ -116,7 +116,7 @@ Commands:
 Databases:
 
   # The type of SQL database that ZHorse should use.
-  # Available databases types are MySQL, SQLite.
+  # Available databases types are MariaDB, SQLite.
   type: SQLite
 
   # Configuration section for SQLite. You can remove it if SQLite is disabled.
@@ -124,9 +124,9 @@ Databases:
     # The name of the database file without extension
     filename: zhorse
 
-  # Configuration section for MySQL. You can remove it if MySQL is disabled.
+  # Configuration section for MariaDB. You can remove it if MariaDB is disabled.
   # The field table-prefix is optional. Use it only in case of shared database.
-  mysql-config:
+  mariadb-config:
     host: 127.0.0.1
     port: 3306
     user: ZHorse

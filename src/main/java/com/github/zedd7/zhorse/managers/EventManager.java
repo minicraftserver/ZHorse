@@ -317,18 +317,18 @@ public class EventManager implements Listener {
 	}
 
 	@EventHandler(priority = EventPriority.HIGH)
-	public void onPlayerLeashEntity(PlayerLeashEntityEvent e) {
-		if (e.getLeashHolder() instanceof Player && e.getEntity() instanceof AbstractHorse) {
-			Player p = (Player) e.getPlayer();
-			ItemStack item = getItem(p, getHoldingHand(p, new ItemStack(Material.LEAD)));
-			int savedAmount = item.getAmount();
-			e.setCancelled(!isPlayerAllowedToInteract(p, (AbstractHorse) e.getEntity(), false));
-			if (e.isCancelled()) {
-				item.setAmount(savedAmount);
-				updateInventory(p);
-			}
-		}
-	}
+        public void onPlayerLeashEntity(PlayerLeashEntityEvent e) {
+                if (e.getLeashHolder() instanceof Player && e.getEntity() instanceof AbstractHorse) {
+                        Player p = (Player) e.getPlayer();
+                        ItemStack item = getItem(p, getHoldingHand(p, new ItemStack(Material.LEAD)));
+                        int savedAmount = item != null ? item.getAmount() : 0;
+                        e.setCancelled(!isPlayerAllowedToInteract(p, (AbstractHorse) e.getEntity(), false));
+                        if (e.isCancelled() && item != null) {
+                                item.setAmount(savedAmount);
+                                updateInventory(p);
+                        }
+                }
+        }
 
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onPlayerUnleashEntity(PlayerUnleashEntityEvent e) {
