@@ -45,14 +45,19 @@ public class MariaDBConnector extends SQLDatabaseConnector {
        }
 
         @Override
-       public void openConnection() throws SQLException {
-               HikariConfig config = new HikariConfig();
-               config.setJdbcUrl(url);
-               config.setUsername(user);
-               config.setPassword(password);
-               config.setDriverClassName(JDBC_DRIVER);
-               dataSource = new HikariDataSource(config);
-               connected = true;
-       }
+        public void openConnection() throws SQLException {
+                try {
+                        Class.forName(JDBC_DRIVER);
+                } catch (ClassNotFoundException e) {
+                        throw new SQLException("MariaDB JDBC driver not found", e);
+                }
+
+                HikariConfig config = new HikariConfig();
+                config.setJdbcUrl(url);
+                config.setUsername(user);
+                config.setPassword(password);
+                dataSource = new HikariDataSource(config);
+                connected = true;
+        }
 
 }
