@@ -103,13 +103,12 @@ public class HorseManager {
 	private AbstractHorse getHorseFromLocation(UUID horseUUID, Location location) {
 		AbstractHorse horse = null;
 		if (location != null) {
-			if (loadChunk(location)) { // Ensure the chunk is loaded
-				horse = getHorseInChunk(horseUUID, location.getChunk());
-				if (horse == null) {
-					List<Chunk> neighboringChunks = getChunksInRegion(location, 2, false);
-					horse = getHorseInRegion(horseUUID, neighboringChunks);
-				}
-			}
+            loadChunk(location);
+            horse = getHorseInChunk(horseUUID, location.getChunk());
+            if (horse == null) {
+                List<Chunk> neighboringChunks = getChunksInRegion(location, 2, false);
+                horse = getHorseInRegion(horseUUID, neighboringChunks);
+            }
 		}
 		return horse;
 	}
@@ -204,6 +203,7 @@ public class HorseManager {
 		if (zh.getCM().shouldUsePaperAPITeleportMethod()) {
 			sourceHorse.teleport(destination);
 			zh.getDM().updateHorseLocation(sourceHorse.getUniqueId(), destination, false, false, null);
+            zh.getHM().updateHorse(sourceHorse, true);
 			return sourceHorse;
 		}
 		else {
@@ -255,14 +255,14 @@ public class HorseManager {
 		if (statsRecord.getDomestication() != null) horse.setDomestication(statsRecord.getDomestication());
 		if (statsRecord.getFireTicks() != null) horse.setFireTicks(statsRecord.getFireTicks());
 		if (statsRecord.isGlowing() != null) horse.setGlowing(statsRecord.isGlowing());
-		if (statsRecord.getMaxHealth() != null) horse.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(statsRecord.getMaxHealth());
+		if (statsRecord.getMaxHealth() != null) horse.getAttribute(Attribute.MAX_HEALTH).setBaseValue(statsRecord.getMaxHealth());
 		if (statsRecord.getHealth() != null) horse.setHealth(statsRecord.getHealth()); // Define maxHealt before current health
 		if (statsRecord.getJumpStrength() != null) horse.setJumpStrength(statsRecord.getJumpStrength());
 		if (statsRecord.getNoDamageTicks() != null) horse.setNoDamageTicks(statsRecord.getNoDamageTicks());
 		if (statsRecord.getRemainingAir() != null) horse.setRemainingAir(statsRecord.getRemainingAir());
 		if (statsRecord.isTamed() != null) horse.setTamed(statsRecord.isTamed());
 		if (statsRecord.getTicksLived() != null) horse.setTicksLived(statsRecord.getTicksLived());
-		if (statsRecord.getSpeed() != null) horse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(statsRecord.getSpeed());
+		if (statsRecord.getSpeed() != null) horse.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(statsRecord.getSpeed());
 		if (statsRecord.getType() != null) {
 			if (statsRecord.getType().equals(EntityType.HORSE.name())) {
 				if (statsRecord.getColor() != null) ((Horse) horse).setColor(Horse.Color.valueOf(statsRecord.getColor()));
@@ -365,10 +365,11 @@ public class HorseManager {
 		int chunkX = location.getChunk().getX();
 		int chunkZ = location.getChunk().getZ();
 
-		if (!world.isChunkLoaded(chunkX, chunkZ)) {
-			world.getChunkAt(chunkX, chunkZ);
-			return false;
-		}
+        boolean wasAlreadyLoaded = world.isChunkLoaded(chunkX, chunkZ);
+
+        if (!wasAlreadyLoaded) {
+            world.getChunkAt(chunkX, chunkZ);
+        }
 		return true;
 	}
 

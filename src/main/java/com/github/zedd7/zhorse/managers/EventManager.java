@@ -16,6 +16,7 @@ import org.bukkit.event.hanging.HangingBreakEvent.RemoveCause;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
+import org.bukkit.event.vehicle.VehicleExitEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.inventory.ItemStack;
@@ -237,22 +238,6 @@ public class EventManager implements Listener {
 				displayHorseStats(horse, p);
 			}
 
-			/* Manages leashing of undead horses */
-			if (horse instanceof SkeletonHorse || horse instanceof ZombieHorse) {
-				if (!horse.isLeashed() && zh.getCM().isLeashOnUndeadHorseAllowed()) {
-					HandEnum holdingHand = getHoldingHand(p, new ItemStack(Material.LEAD));
-					if (!holdingHand.equals(HandEnum.NONE)) { // If player is holding a leash
-						cancelEvent(e, p, true, true);
-						PlayerLeashEntityEvent event = new PlayerLeashEntityEvent(horse, p, p);
-						zh.getServer().getPluginManager().callEvent(event);
-						if (!event.isCancelled()) {
-							consumeItem(p, holdingHand);
-							horse.setLeashHolder(p); // Does not work on untamed undead horses
-						}
-					}
-				}
-			}
-
 			/* Manages riding of foals and untamed undead horses */
 			boolean matchUseCase = false;
 			boolean interactionAllowed = true;
@@ -321,6 +306,8 @@ public class EventManager implements Listener {
 		if (e.getLeashHolder() instanceof Player && e.getEntity() instanceof AbstractHorse) {
 			Player p = (Player) e.getPlayer();
 			ItemStack item = getItem(p, getHoldingHand(p, new ItemStack(Material.LEAD)));
+            if(item == null)
+                item = new ItemStack(Material.LEAD);
 			int savedAmount = item.getAmount();
 			e.setCancelled(!isPlayerAllowedToInteract(p, (AbstractHorse) e.getEntity(), false));
 			if (e.isCancelled()) {
@@ -345,6 +332,15 @@ public class EventManager implements Listener {
 			cancelEvent(e, p, cancel, true);
 		}
 	}
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onVehicleExitEvent(VehicleExitEvent e){
+        if(e.getVehicle() instanceof AbstractHorse){
+            if(zh.getHM().isHorseTracked(e.getVehicle().getUniqueId())){
+                zh.getHM().updateHorse((AbstractHorse) e.getVehicle(), true);
+            }
+        }
+    }
 
 	private void cancelEvent(Cancellable e, Player p, boolean cancel, boolean restoreLocation) {
 		Location savedLocation = p.getLocation();

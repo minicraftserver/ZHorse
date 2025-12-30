@@ -348,7 +348,8 @@ Settings:
   # If a horse happens to be missing (possible bug) and its
   # stats and inventory are registered in the database (automatic),
   # a perfect copy of it will be spawned at its last seen location.
-  respawn-missing-horse: true
+  # However, it will probably also cause duplication.
+  respawn-missing-horse: false
 
   # Set to false to prevent items from being stored on horse death.
   # It will make them available for looting but they will not be
