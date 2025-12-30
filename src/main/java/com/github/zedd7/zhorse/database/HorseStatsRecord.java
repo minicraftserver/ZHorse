@@ -98,10 +98,10 @@ public class HorseStatsRecord {
 		this.isGlowing = horse.isGlowing();
 		this.isTamed = horse.isTamed();
 		this.jumpStrength = horse.getJumpStrength();
-		this.maxHealth = horse.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue();
+		this.maxHealth = horse.getAttribute(Attribute.MAX_HEALTH).getBaseValue();
 		this.noDamageTicks = horse.getNoDamageTicks();
 		this.remainingAir = horse.getRemainingAir();
-		this.speed = horse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue();
+		this.speed = horse.getAttribute(Attribute.MOVEMENT_SPEED).getBaseValue();
 		this.ticksLived = horse.getTicksLived();
 		this.type = horse.getType().name();
 
