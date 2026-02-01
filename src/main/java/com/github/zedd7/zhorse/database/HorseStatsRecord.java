@@ -113,7 +113,9 @@ public class HorseStatsRecord {
 		case LLAMA:
 			this.color = ((Llama) horse).getColor().name();
 			this.strength = ((Llama) horse).getStrength();
+			break;
 		default:
+			this.strength = 0;
 			break;
 		}
 	}
@@ -191,6 +193,8 @@ public class HorseStatsRecord {
 	}
 
 	public Integer getStrength() {
+		if(strength == null)
+			return 0;
 		return strength;
 	}
 
