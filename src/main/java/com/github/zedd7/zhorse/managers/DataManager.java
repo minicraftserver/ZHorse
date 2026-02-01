@@ -1,6 +1,8 @@
 package com.github.zedd7.zhorse.managers;
 
 import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Locale;
@@ -26,6 +28,7 @@ import com.github.zedd7.zhorse.enums.DatabaseEnum;
 import com.github.zedd7.zhorse.utils.CallbackListener;
 import com.github.zedd7.zhorse.utils.CallbackResponse;
 
+//TODO: Cleanup String and make them REAL prepared statements!
 public class DataManager {
 
 	public static final String[] TABLE_ARRAY = {"player", "friend", "pending_message", "horse", "horse_death", "horse_inventory", "horse_stable", "horse_stats", "sale"};
@@ -429,20 +432,24 @@ public class DataManager {
 	}
 
 	public boolean registerHorse(HorseRecord horseRecord, boolean sync, CallbackListener<Boolean> listener) {
-		String update = String.format("INSERT INTO prefix_horse VALUES (\"%s\", \"%s\", %d, \"%s\", %d, %d, %d, \"%s\", %d, %d, %d)",
-			horseRecord.getUUID(),
-			horseRecord.getOwner(),
-			horseRecord.getId(),
-			horseRecord.getName(),
-			horseRecord.isLocked() ? 1 : 0,
-			horseRecord.isProtected() ? 1 : 0,
-			horseRecord.isShared() ? 1 : 0,
-			horseRecord.getLocationWorld(),
-			horseRecord.getLocationX(),
-			horseRecord.getLocationY(),
-			horseRecord.getLocationZ()
-		);
-		return db.executeUpdate(update, sync, listener);
+		try{
+			PreparedStatement preparedStatement = db.getConnection().prepareStatement("INSERT INTO "+zh.getCM().getDatabaseTablePrefix()+"_horse VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			preparedStatement.setString(1, horseRecord.getUUID());
+			preparedStatement.setString(2, horseRecord.getOwner());
+			preparedStatement.setInt(3, horseRecord.getId());
+			preparedStatement.setString(4, horseRecord.getName());
+			preparedStatement.setBoolean(5, horseRecord.isLocked());
+			preparedStatement.setBoolean(6, horseRecord.isProtected());
+			preparedStatement.setBoolean(7, horseRecord.isShared());
+			preparedStatement.setString(8, horseRecord.getLocationWorld());
+			preparedStatement.setInt(9, horseRecord.getLocationX());
+			preparedStatement.setInt(10, horseRecord.getLocationY());
+			preparedStatement.setInt(11, horseRecord.getLocationZ());
+			return db.executeUpdate(preparedStatement, sync, listener);
+		}catch (SQLException e){
+			e.printStackTrace();
+		}
+		return false;
 	}
 
 	public boolean registerHorseDeath(HorseDeathRecord horseDeathRecord, boolean sync, CallbackListener<Boolean> listener) {
@@ -533,31 +540,35 @@ public class DataManager {
 	public boolean registerHorseStats(HorseStatsRecord horseStatsRecord, boolean sync, CallbackListener<Boolean> listener) {
 		String color = horseStatsRecord.getColor();
 		String style = horseStatsRecord.getStyle();
-		String update = String.format(Locale.US, "INSERT INTO prefix_horse_stats VALUES (\"%s\", %d, %d, %d, %s, \"%s\", %d, %d, %f, %d, %d, %d, %d, %f, %f, %d, %d, %f, %d, %s, %d, \"%s\")",
-			horseStatsRecord.getUUID(),
-			horseStatsRecord.getAge(),
-			horseStatsRecord.canBreed() ? 1 : 0,
-			horseStatsRecord.canPickupItems() ? 1 : 0,
-			color != null ? "\"" + color + "\"" : null,
-			horseStatsRecord.getCustomName(),
-			horseStatsRecord.getDomestication(),
-			horseStatsRecord.getFireTicks(),
-			horseStatsRecord.getHealth(),
-			horseStatsRecord.isCarryingChest() ? 1 : 0,
-			horseStatsRecord.isCustomNameVisible() ? 1 : 0,
-			horseStatsRecord.isGlowing() ? 1 : 0,
-			horseStatsRecord.isTamed() ? 1 : 0,
-			horseStatsRecord.getJumpStrength(),
-			horseStatsRecord.getMaxHealth(),
-			horseStatsRecord.getNoDamageTicks(),
-			horseStatsRecord.getRemainingAir(),
-			horseStatsRecord.getSpeed(),
-			horseStatsRecord.getStrength(),
-			style != null ? "\"" + style + "\"" : null,
-			horseStatsRecord.getTicksLived(),
-			horseStatsRecord.getType()
-		);
-		return db.executeUpdate(update, sync, listener);
+		try {
+			PreparedStatement preparedStatement = db.getConnection().prepareStatement("INSERT INTO "+zh.getCM().getDatabaseTablePrefix()+"_horse_stats VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			preparedStatement.setString(1, horseStatsRecord.getUUID());
+			preparedStatement.setInt(2, horseStatsRecord.getAge());
+			preparedStatement.setInt(3, horseStatsRecord.canBreed() ? 1 : 0);
+			preparedStatement.setInt(4, horseStatsRecord.canPickupItems() ? 1 : 0);
+			preparedStatement.setString(5, color);
+			preparedStatement.setString(6, horseStatsRecord.getCustomName());
+			preparedStatement.setInt(7, horseStatsRecord.getDomestication());
+			preparedStatement.setInt(8, horseStatsRecord.getFireTicks());
+			preparedStatement.setDouble(9, horseStatsRecord.getHealth());
+			preparedStatement.setInt(10, horseStatsRecord.isCarryingChest() ? 1 : 0);
+			preparedStatement.setInt(11, horseStatsRecord.isCustomNameVisible() ? 1 : 0);
+			preparedStatement.setInt(12, horseStatsRecord.isGlowing() ? 1 : 0);
+			preparedStatement.setInt(13, horseStatsRecord.isTamed() ? 1 : 0);
+			preparedStatement.setDouble(14, horseStatsRecord.getJumpStrength());
+			preparedStatement.setDouble(15, horseStatsRecord.getMaxHealth());
+			preparedStatement.setInt(16, horseStatsRecord.getNoDamageTicks());
+			preparedStatement.setInt(17, horseStatsRecord.getRemainingAir());
+			preparedStatement.setDouble(18, horseStatsRecord.getSpeed());
+			preparedStatement.setInt(19, horseStatsRecord.getStrength());
+			preparedStatement.setString(20, style);
+			preparedStatement.setInt(21, horseStatsRecord.getTicksLived());
+			preparedStatement.setString(22, horseStatsRecord.getType());
+			return db.executeUpdate(preparedStatement, sync, listener);
+		}catch (SQLException e){
+			e.printStackTrace();
+		}
+		return false;
 	}
 
 	public boolean registerPendingMessage(PendingMessageRecord messageRecord, boolean sync, CallbackListener<Boolean> listener) {
@@ -728,8 +739,15 @@ public class DataManager {
 	}
 
 	public boolean updateHorseName(UUID horseUUID, String name, boolean sync, CallbackListener<Boolean> listener) {
-		String update = String.format("UPDATE prefix_horse SET name = \"%s\" WHERE uuid = \"%s\"", name, horseUUID);
-		return db.executeUpdate(update, sync, listener);
+		try{
+			PreparedStatement preparedStatement = db.getConnection().prepareStatement("UPDATE "+zh.getCM().getDatabaseTablePrefix()+"_horse SET name = ? WHERE uuid = ?");
+			preparedStatement.setString(1, name);
+			preparedStatement.setString(2, horseUUID.toString());
+			return db.executeUpdate(preparedStatement, sync, listener);
+		}catch (SQLException e){
+			e.printStackTrace();
+		}
+		return false;
 	}
 
 	public boolean updateHorseOwner(UUID horseUUID, UUID ownerUUID, boolean sync, CallbackListener<Boolean> listener) {
@@ -802,43 +820,53 @@ public class DataManager {
 	}
 
 	public boolean updateHorseInventory(HorseInventoryRecord horseInventoryRecord, boolean sync, CallbackListener<Boolean> listener) {
-		String update = String.format("UPDATE prefix_horse_inventory SET serial = \"%s\" WHERE uuid = \"%s\"",
-				horseInventoryRecord.getSerial(),
-				horseInventoryRecord.getUUID()
-		);
-		return db.executeUpdate(update, sync, listener);
+		try {
+			PreparedStatement preparedStatement = db.getConnection().prepareStatement("UPDATE "+zh.getCM().getDatabaseTablePrefix()+"_horse_inventory SET serial = ? WHERE uuid = ?");
+			preparedStatement.setString(1, horseInventoryRecord.getSerial());
+			preparedStatement.setString(2, horseInventoryRecord.getUUID());
+			return db.executeUpdate(preparedStatement, sync, listener);
+		}catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 
 	public boolean updateHorseStats(HorseStatsRecord horseStatsRecord, boolean sync, CallbackListener<Boolean> listener) {
 		String color = horseStatsRecord.getColor();
 		String style = horseStatsRecord.getStyle();
-		String update = String.format(Locale.US, "UPDATE prefix_horse_stats SET age = %d, canBreed = %d, canPickupItems = %d, color = %s, customName = \"%s\",domestication = %d, fireTicks = %d,"
-				+ "health = %f, isCarryingChest = %d, isCustomNameVisible = %d, isGlowing = %d, isTamed = %d, jumpStrength = %f, maxHealth = %f, noDamageTicks = %d, remainingAir = %d, speed = %f,"
-				+ "strength = %d, style = %s, ticksLived = %d, type = \"%s\" WHERE uuid = \"%s\"",
-			horseStatsRecord.getAge(),
-			horseStatsRecord.canBreed() ? 1 : 0,
-			horseStatsRecord.canPickupItems() ? 1 : 0,
-			color != null ? "\"" + color + "\"" : null,
-			horseStatsRecord.getCustomName(),
-			horseStatsRecord.getDomestication(),
-			horseStatsRecord.getFireTicks(),
-			horseStatsRecord.getHealth(),
-			horseStatsRecord.isCarryingChest() ? 1 : 0,
-			horseStatsRecord.isCustomNameVisible() ? 1 : 0,
-			horseStatsRecord.isGlowing() ? 1 : 0,
-			horseStatsRecord.isTamed() ? 1 : 0,
-			horseStatsRecord.getJumpStrength(),
-			horseStatsRecord.getMaxHealth(),
-			horseStatsRecord.getNoDamageTicks(),
-			horseStatsRecord.getRemainingAir(),
-			horseStatsRecord.getSpeed(),
-			horseStatsRecord.getStrength(),
-			style != null ? "\"" + style + "\"" : null,
-			horseStatsRecord.getTicksLived(),
-			horseStatsRecord.getType(),
-			horseStatsRecord.getUUID()
-		);
-		return db.executeUpdate(update, sync, listener);
+
+		try {
+			PreparedStatement preparedStatement = db.getConnection().prepareStatement("UPDATE "+zh.getCM().getDatabaseTablePrefix()+"_horse_stats SET age = ?, canBreed = ?, canPickupItems = ?, color = ?, customName = ?,domestication = ?, fireTicks = ?,"
+					+ "health = ?, isCarryingChest = ?, isCustomNameVisible = ?, isGlowing = ?, isTamed = ?, jumpStrength = ?, maxHealth = ?, noDamageTicks = ?, remainingAir = ?, speed = ?,"
+					+ "strength = ?, style = ?, ticksLived = ?, type = ? WHERE uuid = ?");
+			preparedStatement.setInt(1, horseStatsRecord.getAge());
+			preparedStatement.setInt(2, horseStatsRecord.canBreed() ? 1 : 0);
+			preparedStatement.setInt(3, horseStatsRecord.canPickupItems() ? 1 : 0);
+			preparedStatement.setString(4, color);
+			preparedStatement.setString(5, horseStatsRecord.getCustomName());
+			preparedStatement.setInt(6, horseStatsRecord.getDomestication());
+			preparedStatement.setInt(7, horseStatsRecord.getFireTicks());
+			preparedStatement.setDouble(8, horseStatsRecord.getHealth());
+			preparedStatement.setInt(9, horseStatsRecord.isCarryingChest() ? 1 : 0);
+			preparedStatement.setInt(10, horseStatsRecord.isCustomNameVisible() ? 1 : 0);
+			preparedStatement.setInt(11, horseStatsRecord.isGlowing() ? 1 : 0);
+			preparedStatement.setInt(12, horseStatsRecord.isTamed() ? 1 : 0);
+			preparedStatement.setDouble(13, horseStatsRecord.getJumpStrength());
+			preparedStatement.setDouble(14, horseStatsRecord.getMaxHealth());
+			preparedStatement.setInt(15, horseStatsRecord.getNoDamageTicks());
+			preparedStatement.setInt(16, horseStatsRecord.getRemainingAir());
+			preparedStatement.setDouble(17, horseStatsRecord.getSpeed());
+			preparedStatement.setInt(18, horseStatsRecord.getStrength());
+			preparedStatement.setString(19, style);
+			preparedStatement.setInt(20, horseStatsRecord.getTicksLived());
+			preparedStatement.setString(21, horseStatsRecord.getType());
+			preparedStatement.setString(22, horseStatsRecord.getUUID());
+
+			return db.executeUpdate(preparedStatement, sync, listener);
+		}catch (SQLException e){
+			e.printStackTrace();
+		}
+		return false;
 	}
 
 	public boolean updatePlayerDisplayExactStats(UUID playerUUID, boolean displayExactStats, boolean sync, CallbackListener<Boolean> listener) {

@@ -67,10 +67,16 @@ public abstract class SQLDatabaseConnector {
 		return connection.prepareStatement(query);
 	}
 
+	public boolean executeUpdate(PreparedStatement preparedStatement, boolean sync, CallbackListener<Boolean> listener) {
+		return executeUpdate(preparedStatement, false, sync, listener);
+	}
+
+	@Deprecated
 	public boolean executeUpdate(String update, boolean sync, CallbackListener<Boolean> listener) {
 		return executeUpdate(update, false, sync, listener);
 	}
 
+	@Deprecated
 	public boolean executeUpdate(final String formatableUpdate, final boolean hideExceptions, boolean sync, final CallbackListener<Boolean> listener) {
 		CallbackResponse<Boolean> response = new CallbackResponse<>();
 		BukkitRunnable task = new BukkitRunnable() {
@@ -85,6 +91,40 @@ public abstract class SQLDatabaseConnector {
 					if (!hideExceptions) {
 						e.printStackTrace();
 						String update = applyTablePrefix(formatableUpdate);
+						zh.getLogger().warning(String.format("SQLException caught on following (%s) execution attempt : %s", sync ? "sync" : "async", update));
+					}
+				}
+				response.setResult(success);
+				if (listener != null) {
+					performCallback(response, sync, listener);
+				}
+			}
+
+		};
+		if (sync) {
+			task.run(); // Use run() instead of runTask() to run on the same tick
+			return response.getResult();
+		}
+		else {
+			task.runTaskAsynchronously(zh);
+			return true;
+		}
+	}
+
+	public boolean executeUpdate(final PreparedStatement preparedStatement, final boolean hideExceptions, boolean sync, final CallbackListener<Boolean> listener) {
+		CallbackResponse<Boolean> response = new CallbackResponse<>();
+		BukkitRunnable task = new BukkitRunnable() {
+
+			@Override
+			public void run() {
+				boolean success = false;
+				try (PreparedStatement statement = preparedStatement) {
+					statement.executeUpdate();
+					success = true;
+				} catch (SQLException e) {
+					if (!hideExceptions) {
+						e.printStackTrace();
+						String update = applyTablePrefix(preparedStatement.toString());
 						zh.getLogger().warning(String.format("SQLException caught on following (%s) execution attempt : %s", sync ? "sync" : "async", update));
 					}
 				}
@@ -429,4 +469,7 @@ public abstract class SQLDatabaseConnector {
 	   R apply(T t) throws SQLException;
 	}
 
+	public Connection getConnection() {
+		return connection;
+	}
 }

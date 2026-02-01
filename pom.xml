@@ -7,7 +7,7 @@
 
     <groupId>com.github.zedd7</groupId>
     <artifactId>ZHorse</artifactId>
-    <version>1.8.5</version>
+    <version>1.8.6</version>
     <packaging>jar</packaging>
 
     <name>ZHorse</name>
